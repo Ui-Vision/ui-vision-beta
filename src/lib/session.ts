@@ -5,7 +5,7 @@ import { prisma } from "./prisma";
 const secretKey = process.env.SESSION_SECRET || "your-secret-key";
 const encodedKey = new TextEncoder().encode(secretKey);
 
-export async function createSession(userId: string): Promise<Response> {
+export async function createSession(userId: string): Promise<NextResponse> {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   const token = await encrypt({ userId, expiresAt });
 
@@ -13,11 +13,11 @@ export async function createSession(userId: string): Promise<Response> {
     data: { userId, token, expiresAt },
   });
 
-  // Set the cookie in the response
-  const response = NextResponse.json({ message: "Session created" });
+  const response = NextResponse.json({ message: "Login successful" });
   response.cookies.set("session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production", 
+    sameSite: "lax",
     path: "/",
     expires: expiresAt,
   });
@@ -29,7 +29,7 @@ export async function encrypt(payload: { userId: string; expiresAt: Date }) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(payload.expiresAt.getTime() / 1000) // Use Unix timestamp
+    .setExpirationTime(payload.expiresAt.getTime() / 1000) // Unix timestamp
     .sign(encodedKey);
 }
 

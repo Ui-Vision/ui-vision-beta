@@ -23,20 +23,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create a session
-    await createSession(user.id);
+    const sessionResponse = await createSession(user.id);
 
-    return NextResponse.json({ message: "Login successful" });
+    return sessionResponse; 
   } catch (error: unknown) {
     if (error instanceof Error) {
-      // now TypeScript knows that error has a message property
       console.error("Login error:", error.message);
       return NextResponse.json(
         { error: "Internal server error", details: error.message },
         { status: 500 }
       );
     } else {
-      // In case error is not an instance of Error
       console.error("Unknown error:", error);
       return NextResponse.json(
         { error: "Internal server error", details: "Unknown error" },
