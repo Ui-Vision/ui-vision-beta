@@ -27,11 +27,21 @@ export async function POST(req: Request) {
     await createSession(user.id);
 
     return NextResponse.json({ message: "Login successful" });
-  } catch (error: any) {
-    console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      // now TypeScript knows that error has a message property
+      console.error("Login error:", error.message);
+      return NextResponse.json(
+        { error: "Internal server error", details: error.message },
+        { status: 500 }
+      );
+    } else {
+      // In case error is not an instance of Error
+      console.error("Unknown error:", error);
+      return NextResponse.json(
+        { error: "Internal server error", details: "Unknown error" },
+        { status: 500 }
+      );
+    }
   }
 }

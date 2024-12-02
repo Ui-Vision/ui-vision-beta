@@ -1,17 +1,12 @@
-// /app/api/user/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/session"; // متد decrypt از session.ts
-import { prisma } from "@/lib/prisma"; // اتصال Prisma
+import { decrypt } from "@/lib/session"; 
+import { prisma } from "@/lib/prisma"; 
 
-interface Session {
-  userId: string; // تعریف تایپ برای userId
-}
 
 export async function GET() {
-  // از await برای دریافت کوکی استفاده کنید
-  const cookieStore = await cookies(); // دریافت کوکی‌ها
-  const sessionToken = cookieStore.get("session")?.value; // حالا می‌توانید get را روی cookieStore فراخوانی کنید
+  const cookieStore = await cookies(); 
+  const sessionToken = cookieStore.get("session")?.value; 
 
   if (!sessionToken) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

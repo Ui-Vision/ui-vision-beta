@@ -35,13 +35,13 @@ export default function Navbar() {
       <div>
         {user ? (
           <div className="flex items-center space-x-4">
-            {user.image && (
+            {/* {user.image && (
               <img
                 src={user.image}
                 alt={user.name}
                 className="w-8 h-8 rounded-full"
               />
-            )}
+            )} */}
             <span>{user.name || user.email}</span>
           </div>
         ) : (

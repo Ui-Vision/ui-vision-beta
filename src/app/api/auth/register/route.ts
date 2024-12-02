@@ -36,11 +36,21 @@ export async function POST(req: Request) {
       message: "User registered successfully",
       user: { id: newUser.id, email: newUser.email, name: newUser.name },
     });
-  } catch (error: any) {
-    console.error("Register error:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      // If error is an instance of Error
+      console.error("Register error:", error.message);
+      return NextResponse.json(
+        { error: "Internal server error", details: error.message },
+        { status: 500 }
+      );
+    } else {
+      // If error is not an instance of Error
+      console.error("Unknown error:", error);
+      return NextResponse.json(
+        { error: "Internal server error", details: "Unknown error" },
+        { status: 500 }
+      );
+    }
   }
 }
