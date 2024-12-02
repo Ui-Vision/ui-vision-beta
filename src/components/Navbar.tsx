@@ -6,7 +6,6 @@ interface User {
   id: string;
   name: string;
   email: string;
-  image?: string;
 }
 
 export default function Navbar() {
@@ -18,8 +17,8 @@ export default function Navbar() {
         const res = await fetch("/api/user", { method: "GET" });
         if (!res.ok) throw new Error("Failed to fetch user");
 
-        const data: User = await res.json();
-        setUser(data);
+        const data = await res.json();
+        setUser(data.user);
       } catch (error) {
         console.error("Error fetching user:", error);
         setUser(null);
@@ -35,19 +34,17 @@ export default function Navbar() {
       <div>
         {user ? (
           <div className="flex items-center space-x-4">
-            {/* {user.image && (
-              <img
-                src={user.image}
-                alt={user.name}
-                className="w-8 h-8 rounded-full"
-              />
-            )} */}
             <span>{user.name || user.email}</span>
           </div>
         ) : (
-          <a href="/login" className="text-blue-400 hover:underline">
-            Login
-          </a>
+          <div className="flex space-x-4">
+            <a href="/login" className="text-blue-400 hover:underline">
+              Login
+            </a>
+            <a href="/register" className="text-green-400 hover:underline">
+              Register
+            </a>
+          </div>
         )}
       </div>
     </nav>

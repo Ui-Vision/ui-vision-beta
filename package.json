@@ -11,12 +11,16 @@
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/nodemailer": "^6.4.17",
     "bcrypt": "^5.1.1",
+    "date-fns": "^4.1.0",
     "jose": "^5.9.6",
     "next": "^15.0.3",
+    "nodemailer": "^6.9.16",
     "prisma": "^6.0.0",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "uuid": "^11.0.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -3,34 +3,28 @@ import { cookies } from "next/headers";
 import { decrypt } from "@/lib/session"; 
 import { prisma } from "@/lib/prisma"; 
 
-
 export async function GET() {
   const cookieStore = await cookies(); 
   const sessionToken = cookieStore.get("session")?.value; 
 
   if (!sessionToken) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ message: "Not authenticated", user: null });
   }
 
   const session = await decrypt(sessionToken);
 
-  if (!session) {
-    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-  }
-
-  // بررسی نوع session.userId
-  if (typeof session.userId !== 'string') {
-    return NextResponse.json({ error: "Invalid userId in session" }, { status: 400 });
+  if (!session || typeof session.userId !== "string") {
+    return NextResponse.json({ message: "Not authenticated", user: null });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.userId }, // استفاده از session.userId به عنوان رشته
-    select: { id: true, name: true, email: true }, // حذف image
+    where: { id: session.userId },
+    select: { id: true, name: true, email: true },
   });
 
   if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ message: "Not authenticated", user: null });
   }
 
-  return NextResponse.json(user);
+  return NextResponse.json({ message: "Authenticated", user });
 }

@@ -1,28 +1,41 @@
 "use client";
 
 import { useState } from "react";
-import { registerSchema } from "../schemas/authSchemas";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [step, setStep] = useState<"register" | "verify">("register");
+  const [email, setEmail] = useState("");
   const router = useRouter();
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData);
 
-    const result = registerSchema.safeParse(data);
-
-    if (!result.success) {
-      setErrors({ error  : "wrong"});
-      return;
-    }
-
     const res = await fetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      setEmail(data.email as string);
+      setStep("verify");
+    } else {
+      const { error } = await res.json();
+      setErrors({ server: error });
+    }
+  }
+
+  async function handleVerify(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const verificationCode = formData.get("code");
+
+    const res = await fetch("/api/auth/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, verificationCode }),
     });
 
     if (res.ok) {
@@ -33,20 +46,20 @@ export default function RegisterPage() {
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <input name="name" placeholder="Name" />
-      {errors.name && <p>{errors.name[0]}</p>}
-
-      <input name="email" type="email" placeholder="Email" />
-      {errors.email && <p>{errors.email[0]}</p>}
-
-      <input name="password" type="password" placeholder="Password" />
-      {errors.password && <p>{errors.password[0]}</p>}
-
+  return step === "register" ? (
+    <form onSubmit={handleRegister}>
+      <input name="name" placeholder="Name" required />
+      <input name="email" type="email" placeholder="Email" required />
+      <input name="password" type="password" placeholder="Password" required />
       {errors.server && <p>{errors.server}</p>}
-
       <button type="submit">Register</button>
+    </form>
+  ) : (
+    <form onSubmit={handleVerify}>
+      <p>We have sent a verification code to your email.</p>
+      <input name="code" placeholder="Verification Code" required className=" bg-transparent text-white" />
+      {errors.server && <p>{errors.server}</p>}
+      <button type="submit">Verify</button>
     </form>
   );
 }

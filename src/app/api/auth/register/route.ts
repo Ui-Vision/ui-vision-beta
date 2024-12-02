@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { sendEmail } from "@/lib/sendEmail";
 
 export async function POST(req: Request) {
   try {
@@ -32,25 +33,53 @@ export async function POST(req: Request) {
       },
     });
 
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    const expirationTime = new Date();
+    expirationTime.setMinutes(expirationTime.getMinutes() + 10); // تاریخ انقضای کد تایید
+
+    await prisma.verificationCode.create({
+      data: {
+        userId: newUser.id,
+        code: verificationCode,
+        expiresAt: expirationTime,
+      },
+    });
+
+    const emailContent = `
+      <p>کد تایید شما :‌ <strong>${verificationCode}</strong></p>
+      <p>این کد بعد از گذشت ۱۰ دقیقه منقضی خواهد شد </p>
+    `;
+    await sendEmail(
+      email,
+      "کد تایید ",
+      `کد تایید شما برای ورود به سایت : ${verificationCode}`,
+      emailContent
+    );
+
     return NextResponse.json({
-      message: "User registered successfully",
-      user: { id: newUser.id, email: newUser.email, name: newUser.name },
+      message: "User registered successfully. Verification email sent.",
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      // If error is an instance of Error
       console.error("Register error:", error.message);
       return NextResponse.json(
         { error: "Internal server error", details: error.message },
         { status: 500 }
       );
-    } else {
-      // If error is not an instance of Error
-      console.error("Unknown error:", error);
+    } else if (typeof error === "string") {
+      console.error("Register error:", error);
       return NextResponse.json(
-        { error: "Internal server error", details: "Unknown error" },
+        { error: "Internal server error", details: error },
         { status: 500 }
       );
     }
+
+    console.error("Register error: Unknown error", error);
+    return NextResponse.json(
+      { error: "Internal server error", details: "An unknown error occurred" },
+      { status: 500 }
+    );
   }
 }
