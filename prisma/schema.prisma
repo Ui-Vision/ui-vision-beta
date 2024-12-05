@@ -10,23 +10,103 @@ datasource db {
 enum Role {
   ADMIN
   USER
+  OWNER
+}
+
+enum SellerLevel {
+  NONE
   SELLER
+  PROSELLER
+}
+
+enum CategoryStatus {
+  ACTIVE
+  OFF
+}
+
+model User {
+  id                String               @id @default(uuid())
+  name              String
+  username          String?              @unique
+  slug              String?              @unique
+  email             String               @unique
+  password          String
+  role              Role                 @default(USER)
+  image             String?
+  sellerLevel       SellerLevel?         @default(NONE)
+  sellerDescription String?
+  products          Product[]
+  orders            Order[]
+  sessions          Session[]
+  emailVerified     Boolean              @default(false)
+  verificationCodes VerificationCode[]
+  resetTokens       PasswordResetToken[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories  Category[]  @relation("ProductToCategory")
+  files       File[]
+  filterTags  FilterTag[] @relation("ProductFilterTags")
+  orders      Order[]
+  isVerified  Boolean     @default(false) 
+  isFeatured  Boolean     @default(false) 
+  coverImage  String?    
+  detailsImage String[]   
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 
-model User {
-  id                String             @id @default(uuid())
-  name              String
-  email             String             @unique
-  password          String
-  role              Role               @default(USER)
-  image             String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  emailVerified     Boolean            @default(false)
-  sessions          Session[]
-  verificationCodes VerificationCode[]
-  resetTokens       PasswordResetToken[]
+model Category {
+  id            String         @id @default(uuid())
+  name          String
+  slug          String         @unique
+  subTitle      String?
+  status        CategoryStatus @default(ACTIVE)
+  filterTags    FilterTag[]
+  products      Product[]      @relation("ProductToCategory")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model FilterTag {
+  id         String    @id @default(uuid())
+  name       String
+  value      String
+  productId  String?
+  products   Product[] @relation("ProductFilterTags")
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+}
+
+model File {
+  id        String   @id @default(uuid())
+  fileName  String
+  filePath  String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  status     String   @default("PENDING")
+  totalPrice Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Session {

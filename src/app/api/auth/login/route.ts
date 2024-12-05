@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { createSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/sendEmail";
+import jalaali from "jalaali-js";
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +27,29 @@ export async function POST(req: Request) {
 
     const sessionResponse = await createSession(user.id);
 
-    return sessionResponse; 
+    const currentDate = new Date();
+    const persianDate = jalaali.toJalaali(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      currentDate.getDate()
+    );
+    const formattedPersianDate = `${persianDate.jy}/${persianDate.jm}/${persianDate.jd}`;
+
+    const emailBody = `
+      <p>سلام ${user.name},</p>
+      <p>ورود شما به سیستم با موفقیت انجام شد. تاریخ ورود شما: ${formattedPersianDate}</p>
+      <p>با تشکر،</p>
+      <p>تیم پشتیبانی</p>
+    `;
+
+    await sendEmail(
+      email,
+      "ورود موفقیت آمیز به حساب کاربری",
+      "ورود شما به سیستم با موفقیت انجام شد",
+      emailBody
+    );
+
+    return sessionResponse;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Login error:", error.message);

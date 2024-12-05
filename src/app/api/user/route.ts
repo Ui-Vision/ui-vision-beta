@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { decrypt } from "@/lib/session"; 
-import { prisma } from "@/lib/prisma"; 
+import { decrypt } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const cookieStore = await cookies(); 
-  const sessionToken = cookieStore.get("session")?.value; 
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session")?.value;
 
   if (!sessionToken) {
     return NextResponse.json({ message: "Not authenticated", user: null });
@@ -19,7 +19,14 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      role: true,
+      emailVerified: true,
+    },
   });
 
   if (!user) {

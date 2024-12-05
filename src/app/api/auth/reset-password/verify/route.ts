@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/sendEmail";
+import jalaali from "jalaali-js";
 
 export async function POST(req: Request) {
   const { token, newPassword } = await req.json();
@@ -12,7 +14,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // Find reset token and associated user
   const resetToken = await prisma.passwordResetToken.findUnique({
     where: { token },
     include: { user: true },
@@ -25,17 +26,32 @@ export async function POST(req: Request) {
     );
   }
 
-  // Hash the new password
   const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-  // Update user password
   await prisma.user.update({
     where: { id: resetToken.userId },
     data: { password: hashedPassword },
   });
-
-  // Delete the reset token to prevent reuse
   await prisma.passwordResetToken.delete({ where: { id: resetToken.id } });
+
+  const user = resetToken.user;
+  const currentDate = new Date();
+  const persianDate = jalaali.toJalaali(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
+  const formattedPersianDate = `${persianDate.jy}/${persianDate.jm}/${persianDate.jd}`;
+
+  const emailBody = `
+    <p>سلام ${user.name},</p>
+    <p>رمز عبور شما با موفقیت تغییر یافت. تاریخ تغییر رمز عبور: ${formattedPersianDate}</p>
+    <p>اگر این تغییر توسط شما انجام نشده است، لطفاً با تیم پشتیبانی تماس بگیرید.</p>
+    <p>با تشکر،</p>
+    <p>تیم پشتیبانی</p>
+  `;
+
+  await sendEmail(
+    user.email,
+    "تغییر موفقیت آمیز رمز عبور",
+    "رمز عبور شما با موفقیت تغییر یافت",
+    emailBody
+  );
 
   return NextResponse.json({ message: "Password reset successfully" });
 }

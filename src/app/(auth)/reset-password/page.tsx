@@ -36,7 +36,7 @@ export default function ResetPasswordRequestPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
+    <div className="max-w-md mx-auto mt-10 p-5">
       <h1 className="text-2xl font-bold mb-4">Reset Your Password</h1>
       {success ? (
         <p className="text-green-500">
@@ -52,7 +52,7 @@ export default function ResetPasswordRequestPage() {
             <input
               type="email"
               id="email"
-              className="border rounded w-full p-2"
+              className="bg-transparent text-white border-[0.6px] border-neutral-400 p-2 w-full"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

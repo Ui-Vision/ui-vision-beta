@@ -39,7 +39,7 @@ export default function RegisterPage() {
     });
 
     if (res.ok) {
-      router.push("/login");
+      router.push("/");
     } else {
       const { error } = await res.json();
       setErrors({ server: error });
@@ -47,19 +47,19 @@ export default function RegisterPage() {
   }
 
   return step === "register" ? (
-    <form onSubmit={handleRegister}>
-      <input name="name" placeholder="Name" required />
-      <input name="email" type="email" placeholder="Email" required />
-      <input name="password" type="password" placeholder="Password" required />
+    <form onSubmit={handleRegister} className="flex flex-col gap-5 p-5">
+      <input name="name" placeholder="Name" required className="bg-transparent text-white border-[0.6px] border-neutral-400 p-2" />
+      <input name="email" type="email" placeholder="Email" className="bg-transparent text-white border-[0.6px] border-neutral-400 p-2" required />
+      <input name="password" type="password" placeholder="Password" className="bg-transparent text-white border-[0.6px] border-neutral-400 p-2" required />
       {errors.server && <p>{errors.server}</p>}
-      <button type="submit">Register</button>
+      <button type="submit" className="bg-blue-600 p-2">Register</button>
     </form>
   ) : (
     <form onSubmit={handleVerify}>
       <p>We have sent a verification code to your email.</p>
-      <input name="code" placeholder="Verification Code" required className=" bg-transparent text-white" />
+      <input name="code" type="text" required className="bg-transparent text-white border-[0.6px] border-neutral-400 p-2" />
       {errors.server && <p>{errors.server}</p>}
-      <button type="submit">Verify</button>
+      <button type="submit" className="p-2 bg-blue-600">Verify</button>
     </form>
   );
 }

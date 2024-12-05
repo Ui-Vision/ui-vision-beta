@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/session";
+import { sendEmail } from "@/lib/sendEmail";
 
 export async function POST(req: Request) {
   try {
@@ -12,8 +13,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    // Find the user by email
     const user = await prisma.user.findUnique({
       where: { email },
       include: { verificationCodes: true },
@@ -22,8 +21,6 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 400 });
     }
-
-    // Find the verification code entry
     const verificationEntry = user.verificationCodes.find(
       (code) => code.code === verificationCode
     );
@@ -34,16 +31,12 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    // Check if the verification code has expired
     if (new Date() > new Date(verificationEntry.expiresAt)) {
       return NextResponse.json(
         { error: "Verification code has expired" },
         { status: 400 }
       );
     }
-
-    // Mark email as verified and remove the verification code
     await prisma.user.update({
       where: { email },
       data: { emailVerified: true },
@@ -53,10 +46,20 @@ export async function POST(req: Request) {
       where: { userId: user.id },
     });
 
-    // Create a session for the user
     const sessionResponse = await createSession(user.id);
 
-    return sessionResponse; // Return session response directly
+    const SuccessEmail = `
+    <p>سلام ${user.name},</p>
+    <p>تبریک می‌گوییم! ثبت‌نام شما با موفقیت تکمیل شد.</p>
+    <p>از اینکه به جمع ما پیوستید خوشحالیم.</p>
+    <p>با تشکر، تیم پشتیبانی.</p>
+  `;
+    await sendEmail(
+      email,
+      "ثبت نام تکمیل شد !⭐️",
+      `ثبت نام شما با موفقیت تکمیل گردید !`,
+      SuccessEmail
+    );
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Verification error:", error.message);

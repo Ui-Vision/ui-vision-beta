@@ -61,6 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       message: "User registered successfully. Verification email sent.",
     });
+   
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Register error:", error.message);

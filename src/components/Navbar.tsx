@@ -1,40 +1,53 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
+import { clearUser } from "@/store/features/userSlice";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
 
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
 
+  const [isLoggedIn, setIsLoggedIn] = useState(!!user?.id);
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch("/api/user", { method: "GET" });
-        if (!res.ok) throw new Error("Failed to fetch user");
+    setIsLoggedIn(!!user?.id);
+  }, [user]);
 
-        const data = await res.json();
-        setUser(data.user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        setUser(null);
+  async function handleLogout() {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: user?.id }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Logout failed");
       }
+      dispatch(clearUser());
+      setIsLoggedIn(false);
+    } catch (error) {
+      console.error("Error logging out:", error);
     }
-
-    fetchUser();
-  }, []);
+  }
 
   return (
-    <nav className="bg-gray-800 text-white p-4 flex justify-between w-full items-center">
-      <div className="text-lg font-bold">My App</div>
+    <nav className="bg-gray-900 text-white border-b-[0.7px] border-neutral-300 p-4 flex justify-between w-full items-center">
+      <div className="text-lg font-bold">Ui Vision</div>
       <div>
-        {user ? (
+        {isLoggedIn ? (
           <div className="flex items-center space-x-4">
-            <span>{user.name || user.email}</span>
+            <span>{user?.name || user?.email}</span>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Logout
+            </button>
           </div>
         ) : (
           <div className="flex space-x-4">
